@@ -56,6 +56,30 @@ def test_step_reward_in_range():
     assert 0.0 < result.info.episode_score < 1.0
 
 
+def test_episode_reward_sum_stays_inside_unit_interval():
+    env = SupportTriageEnv()
+    env.reset("support_triage_easy", seed=7)
+    rewards = []
+
+    while not env.done:
+        ticket = env.episode_tickets[env.current_index]
+        result = env.step(
+            Action(
+                category=ticket.category,
+                priority=ticket.priority,
+                escalate=ticket.escalate,
+                response_template=ticket.template,
+                defer=False,
+                note="perfect triage",
+            )
+        )
+        rewards.append(result.reward)
+
+    total = sum(rewards)
+    assert 0.0 < total < 1.0
+    assert abs(total - env.state().normalized_score) < 1e-4
+
+
 def test_reward_breakdown_values_stay_inside_unit_interval():
     env = SupportTriageEnv()
     env.reset("support_triage_hard")

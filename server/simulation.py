@@ -470,6 +470,9 @@ class SupportTriageEnv:
         self.current_wait_bonus_hours = 0
         return self._observation()
 
+    def _normalize_step_reward(self, reward: float) -> float:
+        return _strict_task_score(reward / float(self.task.spec.total_tickets))
+
     def step(self, action: Action) -> StepResult:
         if self.done:
             info = self._step_info(self._empty_breakdown())
@@ -477,7 +480,7 @@ class SupportTriageEnv:
             self.last_action_error = info.last_action_error
             return StepResult(
                 observation=self._observation(),
-                reward=_strict_reward_component(0.0),
+                reward=self._normalize_step_reward(0.0),
                 done=True,
                 info=info,
             )
@@ -531,8 +534,7 @@ class SupportTriageEnv:
         return StepResult(observation=self._observation(), reward=round(reward, 4), done=self.done, info=info)
 
     def state(self) -> StateSnapshot:
-        normalized_score = self.cumulative_reward / float(self.task.spec.total_tickets)
-        normalized_score = _strict_task_score(normalized_score)
+        normalized_score = _strict_task_score(self.cumulative_reward)
         return StateSnapshot(
             task=self.task.spec,
             seed=self.seed,
@@ -562,12 +564,11 @@ class SupportTriageEnv:
         )
 
     def _step_info(self, grader: RewardBreakdown) -> StepInfo:
-        episode_score = self.cumulative_reward / float(self.task.spec.total_tickets)
         return StepInfo(
             task_id=self.task.spec.task_id,
             difficulty=self.task.spec.difficulty,
             grader=grader,
-            episode_score=_strict_task_score(episode_score),
+            episode_score=_strict_task_score(self.cumulative_reward),
             done_reason=self.done_reason,
             last_action_error=self.last_action_error,
         )
@@ -644,7 +645,8 @@ class SupportTriageEnv:
             + weights["template"] * raw_template_score
         )
         raw_business_penalty = self._business_penalty(ticket, action, effective_hours_open)
-        reward = _strict_reward_component(max(0.0, min(1.0, raw_accuracy_score - raw_business_penalty)))
+        raw_reward = max(0.0, min(1.0, raw_accuracy_score - raw_business_penalty))
+        reward = self._normalize_step_reward(raw_reward)
 
         breakdown = RewardBreakdown(
             category_score=_strict_reward_component(raw_category_score),
@@ -672,7 +674,8 @@ class SupportTriageEnv:
         if _risk_band(ticket) == "critical":
             defer_penalty += 0.10
 
-        reward = _strict_reward_component(max(0.0, min(1.0, base_credit - defer_penalty)))
+        raw_reward = max(0.0, min(1.0, base_credit - defer_penalty))
+        reward = self._normalize_step_reward(raw_reward)
         breakdown = RewardBreakdown(
             category_score=_strict_reward_component(0.0),
             priority_score=_strict_reward_component(0.0),

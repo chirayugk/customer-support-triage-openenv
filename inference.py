@@ -41,13 +41,13 @@ def log_step(step: int, action: str, reward: float, done: bool, error: Optional[
     error_val = single_line(error) if error else "null"
     done_val = str(done).lower()
     print(
-        f"[STEP] step={step} action={single_line(action)} reward={reward:.2f} done={done_val} error={error_val}",
+        f"[STEP] step={step} action={single_line(action)} reward={reward:.4f} done={done_val} error={error_val}",
         flush=True,
     )
 
 
 def log_end(success: bool, steps: int, rewards: List[float]) -> None:
-    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    rewards_str = ",".join(f"{r:.4f}" for r in rewards)
     print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}", flush=True)
 
 
@@ -176,11 +176,11 @@ def run_task(client: OpenAI, task_id: str) -> None:
         state_resp = http.get("/state")
         state_resp.raise_for_status()
         score = float(state_resp.json()["state"]["normalized_score"])
-        score = max(0.0, min(1.0, score))
+        score = max(0.0001, min(0.9999, score))
         success = score >= 0.70
     except Exception:
         success = False
-        score = 0.0
+        score = 0.0001
     finally:
         http.close()
         log_end(success=success, steps=steps, rewards=rewards)

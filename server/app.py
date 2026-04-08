@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import ValidationError
@@ -764,7 +764,8 @@ def tasks() -> TasksResponse:
 
 
 @app.post("/reset", response_model=ResetResponse, tags=["openenv"])
-def reset(req: ResetRequest) -> ResetResponse:
+def reset(req: Optional[ResetRequest] = Body(default=None)) -> ResetResponse:
+    req = req or ResetRequest()
     try:
         observation = env.reset(task_id=req.task_id, seed=req.seed, max_episode_steps=req.max_episode_steps)
     except ValueError as exc:

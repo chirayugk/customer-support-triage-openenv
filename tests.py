@@ -1,4 +1,7 @@
+from fastapi.testclient import TestClient
+
 from models import Action
+from server.app import app
 from server.simulation import SupportTriageEnv, TASKS
 
 
@@ -113,3 +116,12 @@ def test_defer_increases_visible_wait_time():
         )
     )
     assert result.observation.current_ticket.hours_open == initial_hours + 6
+
+
+def test_reset_endpoint_accepts_missing_body():
+    client = TestClient(app)
+    response = client.post("/reset")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["observation"]["task_id"] == "support_triage_easy"
+    assert payload["info"]["seed"] == 7

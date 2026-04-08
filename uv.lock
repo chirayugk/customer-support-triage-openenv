@@ -1,0 +1,4 @@
+# Placeholder lockfile for validator compatibility.
+# Generate a full lockfile with:
+#   uv lock
+

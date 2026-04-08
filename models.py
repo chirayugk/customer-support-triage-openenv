@@ -78,7 +78,7 @@ class StepInfo(BaseModel):
     task_id: str
     difficulty: Difficulty
     grader: RewardBreakdown
-    episode_score: float = Field(ge=0.0, le=1.0)
+    episode_score: float = Field(gt=0.0, lt=1.0)
     done_reason: Literal["in_progress", "all_tickets_processed", "max_steps_reached"]
     last_action_error: Optional[str] = None
 
@@ -108,7 +108,7 @@ class StateSnapshot(BaseModel):
     done: bool
     done_reason: str
     cumulative_reward: float = Field(ge=0.0)
-    normalized_score: float = Field(ge=0.0, le=1.0)
+    normalized_score: float = Field(gt=0.0, lt=1.0)
     processed_tickets: List[Dict[str, object]]
     deferred_count: int = Field(ge=0)
     consecutive_defers: int = Field(ge=0)

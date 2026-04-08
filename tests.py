@@ -15,7 +15,7 @@ def test_reset_and_state_shape():
     obs = env.reset("support_triage_easy")
     assert obs.total_tickets == 5
     state = env.state()
-    assert state.normalized_score == 0.0
+    assert 0.0 < state.normalized_score < 1.0
     assert state.done is False
     assert state.seed == 7
 
@@ -53,7 +53,31 @@ def test_step_reward_in_range():
     )
     result = env.step(action)
     assert 0.0 <= result.reward <= 1.0
-    assert 0.0 <= result.info.episode_score <= 1.0
+    assert 0.0 < result.info.episode_score < 1.0
+
+
+def test_perfect_episode_score_stays_strictly_inside_unit_interval():
+    env = SupportTriageEnv()
+    env.reset("support_triage_easy", seed=7)
+
+    while not env.done:
+        ticket = env.episode_tickets[env.current_index]
+        result = env.step(
+            Action(
+                category=ticket.category,
+                priority=ticket.priority,
+                escalate=ticket.escalate,
+                response_template=ticket.template,
+                defer=False,
+                note="perfect triage",
+            )
+        )
+        if result.done:
+            break
+
+    state = env.state()
+    assert 0.0 < state.normalized_score < 1.0
+    assert 0.0 < result.info.episode_score < 1.0
 
 
 def test_episode_completes():

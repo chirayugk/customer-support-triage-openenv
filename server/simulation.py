@@ -29,6 +29,9 @@ ALLOWED_TEMPLATES = [
 ]
 
 
+STRICT_SCORE_EPSILON = 1e-4
+
+
 @dataclass(frozen=True)
 class TicketTruth:
     ticket_id: str
@@ -420,6 +423,11 @@ def _template_score(ticket: TicketTruth, action: Action) -> float:
     return 0.0
 
 
+def _strict_task_score(value: float) -> float:
+    rounded = round(value, 4)
+    return min(1.0 - STRICT_SCORE_EPSILON, max(STRICT_SCORE_EPSILON, rounded))
+
+
 class SupportTriageEnv:
     def __init__(self) -> None:
         self.task = TASKS["support_triage_easy"]
@@ -515,7 +523,7 @@ class SupportTriageEnv:
 
     def state(self) -> StateSnapshot:
         normalized_score = self.cumulative_reward / float(self.task.spec.total_tickets)
-        normalized_score = max(0.0, min(1.0, normalized_score))
+        normalized_score = _strict_task_score(normalized_score)
         return StateSnapshot(
             task=self.task.spec,
             seed=self.seed,
@@ -523,7 +531,7 @@ class SupportTriageEnv:
             done=self.done,
             done_reason=self.done_reason,
             cumulative_reward=round(self.cumulative_reward, 4),
-            normalized_score=round(normalized_score, 4),
+            normalized_score=normalized_score,
             processed_tickets=self.processed_tickets,
             deferred_count=self.deferred_count,
             consecutive_defers=self.consecutive_defers,
@@ -550,7 +558,7 @@ class SupportTriageEnv:
             task_id=self.task.spec.task_id,
             difficulty=self.task.spec.difficulty,
             grader=grader,
-            episode_score=max(0.0, min(1.0, round(episode_score, 4))),
+            episode_score=_strict_task_score(episode_score),
             done_reason=self.done_reason,
             last_action_error=self.last_action_error,
         )

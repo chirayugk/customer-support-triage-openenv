@@ -136,7 +136,7 @@ Then open:
 
 The fastest public deploy for this repo is **Hugging Face Spaces** because the project already includes [openenv.yaml](hakc/openenv.yaml) and a [Dockerfile](hakc/Dockerfile).
 
-### Option 1: Hugging Face Spaces
+### Hugging Face Spaces
 
 1. Create a new **Docker Space** on Hugging Face.
 2. Push this repo to the Space.
@@ -151,20 +151,7 @@ The app serves:
 - `/docs` for the API explorer
 - `/health` for uptime checks
 
-### Option 2: Render or Railway
 
-This repo now respects the host-provided `PORT` environment variable, so it can run on container hosts without code changes.
-
-Use these settings:
-
-- Build method: `Dockerfile`
-- Start command: leave default image command
-- Health check path: `/health`
-
-If you also want to run [inference.py](/c:/Users/sharm/Desktop/hakc/inference.py) against the deployed app, set:
-
-- `ENV_URL=https://your-deployed-url`
-- `HF_TOKEN` or `OPENAI_API_KEY` only if you are calling an external model
 
 ## Baseline Inference
 

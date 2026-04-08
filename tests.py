@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from inference import log_end
 from models import Action
 from server.app import app
 from server.simulation import STRICT_SCORE_EPSILON, SupportTriageEnv, TASKS
@@ -232,3 +233,11 @@ def test_step_after_completion_uses_strict_placeholder_scores():
     assert 0.0 < result.info.episode_score < 1.0
     for value in result.info.grader.model_dump().values():
         assert 0.0 < value < 1.0
+
+
+def test_log_end_includes_task_score_field(capsys):
+    log_end(success=True, steps=3, score=0.99, rewards=[0.19, 0.20, 0.20])
+    captured = capsys.readouterr().out.strip()
+    assert captured.startswith("[END] ")
+    assert "score=0.9900" in captured
+    assert "rewards=0.1900,0.2000,0.2000" in captured

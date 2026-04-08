@@ -46,9 +46,12 @@ def log_step(step: int, action: str, reward: float, done: bool, error: Optional[
     )
 
 
-def log_end(success: bool, steps: int, rewards: List[float]) -> None:
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
     rewards_str = ",".join(f"{r:.4f}" for r in rewards)
-    print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}", flush=True)
+    print(
+        f"[END] success={str(success).lower()} steps={steps} score={score:.4f} rewards={rewards_str}",
+        flush=True,
+    )
 
 
 def heuristic_action(ticket: Dict[str, object]) -> Dict[str, object]:
@@ -183,7 +186,7 @@ def run_task(client: OpenAI, task_id: str) -> None:
         score = 0.0001
     finally:
         http.close()
-        log_end(success=success, steps=steps, rewards=rewards)
+        log_end(success=success, steps=steps, score=score, rewards=rewards)
 
 
 def main() -> None:

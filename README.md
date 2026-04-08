@@ -25,10 +25,6 @@ Instead of asking an agent to solve a toy puzzle, this environment asks it to ma
 - what response template is safe to use
 - whether deferring it is acceptable or harmful
 
-## Why this is a strong hackathon project
-
-This repo can be pitched as:
-
 **"A benchmark for AI support agents that measures operational judgment, not just text generation."**
 
 That works well in a hackathon because it has all three things judges tend to reward:
@@ -136,9 +132,9 @@ Then open:
 - `http://localhost:7860/` for the local UI
 - `http://localhost:7860/docs` for the API docs
 
-## Hosting For A Hackathon
+## Hosting 
 
-The fastest public deploy for this repo is **Hugging Face Spaces** because the project already includes [openenv.yaml](/c:/Users/sharm/Desktop/hakc/openenv.yaml) and a [Dockerfile](/c:/Users/sharm/Desktop/hakc/Dockerfile).
+The fastest public deploy for this repo is **Hugging Face Spaces** because the project already includes [openenv.yaml](hakc/openenv.yaml) and a [Dockerfile](hakc/Dockerfile).
 
 ### Option 1: Hugging Face Spaces
 
@@ -172,7 +168,7 @@ If you also want to run [inference.py](/c:/Users/sharm/Desktop/hakc/inference.py
 
 ## Baseline Inference
 
-The baseline script is [inference.py](/c:/Users/sharm/Desktop/hakc/inference.py).
+The baseline script is [inference.py](hakc/inference.py).
 
 Environment variables:
 
@@ -204,12 +200,9 @@ The stdout contract for each episode is:
 python -m pytest -q
 ```
 
-## Winning Demo Pitch
-
-If you want to present this as a polished hackathon project, lead with this:
+## Demo Pitch
 
 1. "Most AI agent demos generate text. Ours makes operational decisions with measurable business consequences."
 2. "We built a support-ops benchmark with deterministic tasks, seeded reproducibility, and business-aware rewards."
 3. "The same setup can be extended to security triage, trust-and-safety review, claims handling, and IT incident routing."
 
-That positioning makes the project feel extensible, practical, and benchmark-driven.

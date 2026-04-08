@@ -57,7 +57,7 @@ This environment now behaves more like a proper benchmark:
 - `GET /health` liveness check
 - `GET /docs` FastAPI / OpenAPI explorer
 
-All rewards are normalized to `[0.0, 1.0]`.
+All exposed task and reward scores are normalized to `(0.0, 1.0)` using a small epsilon clamp, so submissions never emit an exact `0.0` or `1.0`.
 
 ## Action Space
 

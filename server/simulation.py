@@ -428,6 +428,10 @@ def _strict_task_score(value: float) -> float:
     return min(1.0 - STRICT_SCORE_EPSILON, max(STRICT_SCORE_EPSILON, rounded))
 
 
+def _strict_reward_component(value: float) -> float:
+    return _strict_task_score(value)
+
+
 class SupportTriageEnv:
     def __init__(self) -> None:
         self.task = TASKS["support_triage_easy"]
@@ -471,7 +475,12 @@ class SupportTriageEnv:
             info = self._step_info(self._empty_breakdown())
             info.last_action_error = "Episode already finished. Call reset()."
             self.last_action_error = info.last_action_error
-            return StepResult(observation=self._observation(), reward=0.0, done=True, info=info)
+            return StepResult(
+                observation=self._observation(),
+                reward=_strict_reward_component(0.0),
+                done=True,
+                info=info,
+            )
 
         self.step_count += 1
         ticket = self.episode_tickets[self.current_index]
@@ -541,15 +550,15 @@ class SupportTriageEnv:
 
     def _empty_breakdown(self) -> RewardBreakdown:
         return RewardBreakdown(
-            category_score=0.0,
-            priority_score=0.0,
-            escalation_score=0.0,
-            template_score=0.0,
-            accuracy_score=0.0,
-            business_impact_penalty=0.0,
-            defer_penalty=0.0,
-            penalty=0.0,
-            step_reward=0.0,
+            category_score=_strict_reward_component(0.0),
+            priority_score=_strict_reward_component(0.0),
+            escalation_score=_strict_reward_component(0.0),
+            template_score=_strict_reward_component(0.0),
+            accuracy_score=_strict_reward_component(0.0),
+            business_impact_penalty=_strict_reward_component(0.0),
+            defer_penalty=_strict_reward_component(0.0),
+            penalty=_strict_reward_component(0.0),
+            step_reward=_strict_reward_component(0.0),
         )
 
     def _step_info(self, grader: RewardBreakdown) -> StepInfo:
@@ -623,30 +632,30 @@ class SupportTriageEnv:
 
     def _grade_action(self, ticket: TicketTruth, action: Action, effective_hours_open: int) -> tuple[float, RewardBreakdown]:
         weights = _difficulty_weights(self.task.spec.difficulty)
-        category_score = 1.0 if action.category == ticket.category else 0.0
-        priority_score = _priority_distance(action.priority, ticket.priority)
-        escalation_score = 1.0 if action.escalate == ticket.escalate else 0.0
-        template_score = _template_score(ticket, action)
+        raw_category_score = 1.0 if action.category == ticket.category else 0.0
+        raw_priority_score = _priority_distance(action.priority, ticket.priority)
+        raw_escalation_score = 1.0 if action.escalate == ticket.escalate else 0.0
+        raw_template_score = _template_score(ticket, action)
 
-        accuracy_score = (
-            weights["category"] * category_score
-            + weights["priority"] * priority_score
-            + weights["escalation"] * escalation_score
-            + weights["template"] * template_score
+        raw_accuracy_score = (
+            weights["category"] * raw_category_score
+            + weights["priority"] * raw_priority_score
+            + weights["escalation"] * raw_escalation_score
+            + weights["template"] * raw_template_score
         )
-        business_penalty = self._business_penalty(ticket, action, effective_hours_open)
-        reward = max(0.0, min(1.0, accuracy_score - business_penalty))
+        raw_business_penalty = self._business_penalty(ticket, action, effective_hours_open)
+        reward = _strict_reward_component(max(0.0, min(1.0, raw_accuracy_score - raw_business_penalty)))
 
         breakdown = RewardBreakdown(
-            category_score=round(category_score, 4),
-            priority_score=round(priority_score, 4),
-            escalation_score=round(escalation_score, 4),
-            template_score=round(template_score, 4),
-            accuracy_score=round(accuracy_score, 4),
-            business_impact_penalty=round(business_penalty, 4),
-            defer_penalty=0.0,
-            penalty=round(business_penalty, 4),
-            step_reward=round(reward, 4),
+            category_score=_strict_reward_component(raw_category_score),
+            priority_score=_strict_reward_component(raw_priority_score),
+            escalation_score=_strict_reward_component(raw_escalation_score),
+            template_score=_strict_reward_component(raw_template_score),
+            accuracy_score=_strict_reward_component(raw_accuracy_score),
+            business_impact_penalty=_strict_reward_component(raw_business_penalty),
+            defer_penalty=_strict_reward_component(0.0),
+            penalty=_strict_reward_component(raw_business_penalty),
+            step_reward=reward,
         )
         return reward, breakdown
 
@@ -663,16 +672,16 @@ class SupportTriageEnv:
         if _risk_band(ticket) == "critical":
             defer_penalty += 0.10
 
-        reward = max(0.0, min(1.0, base_credit - defer_penalty))
+        reward = _strict_reward_component(max(0.0, min(1.0, base_credit - defer_penalty)))
         breakdown = RewardBreakdown(
-            category_score=0.0,
-            priority_score=0.0,
-            escalation_score=0.0,
-            template_score=0.0,
-            accuracy_score=0.0,
-            business_impact_penalty=0.0,
-            defer_penalty=round(min(1.0, defer_penalty), 4),
-            penalty=round(min(1.0, defer_penalty), 4),
-            step_reward=round(reward, 4),
+            category_score=_strict_reward_component(0.0),
+            priority_score=_strict_reward_component(0.0),
+            escalation_score=_strict_reward_component(0.0),
+            template_score=_strict_reward_component(0.0),
+            accuracy_score=_strict_reward_component(0.0),
+            business_impact_penalty=_strict_reward_component(0.0),
+            defer_penalty=_strict_reward_component(min(1.0, defer_penalty)),
+            penalty=_strict_reward_component(min(1.0, defer_penalty)),
+            step_reward=reward,
         )
         return reward, breakdown

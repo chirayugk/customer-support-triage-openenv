@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 
 from models import Action
 from server.app import app
-from server.simulation import SupportTriageEnv, TASKS
+from server.simulation import STRICT_SCORE_EPSILON, SupportTriageEnv, TASKS
 
 
 def test_three_tasks_available():
@@ -52,8 +52,25 @@ def test_step_reward_in_range():
         note="test",
     )
     result = env.step(action)
-    assert 0.0 <= result.reward <= 1.0
+    assert 0.0 < result.reward < 1.0
     assert 0.0 < result.info.episode_score < 1.0
+
+
+def test_reward_breakdown_values_stay_inside_unit_interval():
+    env = SupportTriageEnv()
+    env.reset("support_triage_hard")
+    result = env.step(
+        Action(
+            category="technical",
+            priority="medium",
+            escalate=False,
+            response_template="general_reply",
+            defer=True,
+            note="need more context",
+        )
+    )
+    for value in result.info.grader.model_dump().values():
+        assert 0.0 < value < 1.0
 
 
 def test_perfect_episode_score_stays_strictly_inside_unit_interval():
@@ -149,3 +166,45 @@ def test_reset_endpoint_accepts_missing_body():
     payload = response.json()
     assert payload["observation"]["task_id"] == "support_triage_easy"
     assert payload["info"]["seed"] == 7
+
+
+def test_metadata_reports_strict_reward_range():
+    client = TestClient(app)
+    response = client.get("/metadata")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["rewards_range"] == [STRICT_SCORE_EPSILON, 1.0 - STRICT_SCORE_EPSILON]
+
+
+def test_step_after_completion_uses_strict_placeholder_scores():
+    env = SupportTriageEnv()
+    env.reset("support_triage_easy", seed=7)
+
+    while not env.done:
+        ticket = env.episode_tickets[env.current_index]
+        env.step(
+            Action(
+                category=ticket.category,
+                priority=ticket.priority,
+                escalate=ticket.escalate,
+                response_template=ticket.template,
+                defer=False,
+                note="perfect triage",
+            )
+        )
+
+    result = env.step(
+        Action(
+            category="billing",
+            priority="low",
+            escalate=False,
+            response_template="general_reply",
+            defer=False,
+            note="after done",
+        )
+    )
+
+    assert 0.0 < result.reward < 1.0
+    assert 0.0 < result.info.episode_score < 1.0
+    for value in result.info.grader.model_dump().values():
+        assert 0.0 < value < 1.0

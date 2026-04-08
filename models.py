@@ -63,15 +63,15 @@ class Action(BaseModel):
 
 
 class RewardBreakdown(BaseModel):
-    category_score: float = Field(ge=0.0, le=1.0)
-    priority_score: float = Field(ge=0.0, le=1.0)
-    escalation_score: float = Field(ge=0.0, le=1.0)
-    template_score: float = Field(ge=0.0, le=1.0)
-    accuracy_score: float = Field(ge=0.0, le=1.0)
-    business_impact_penalty: float = Field(ge=0.0, le=1.0)
-    defer_penalty: float = Field(ge=0.0, le=1.0)
-    penalty: float = Field(ge=0.0, le=1.0)
-    step_reward: float = Field(ge=0.0, le=1.0)
+    category_score: float = Field(gt=0.0, lt=1.0)
+    priority_score: float = Field(gt=0.0, lt=1.0)
+    escalation_score: float = Field(gt=0.0, lt=1.0)
+    template_score: float = Field(gt=0.0, lt=1.0)
+    accuracy_score: float = Field(gt=0.0, lt=1.0)
+    business_impact_penalty: float = Field(gt=0.0, lt=1.0)
+    defer_penalty: float = Field(gt=0.0, lt=1.0)
+    penalty: float = Field(gt=0.0, lt=1.0)
+    step_reward: float = Field(gt=0.0, lt=1.0)
 
 
 class StepInfo(BaseModel):
@@ -85,7 +85,7 @@ class StepInfo(BaseModel):
 
 class StepResult(BaseModel):
     observation: Observation
-    reward: float = Field(ge=0.0, le=1.0)
+    reward: float = Field(gt=0.0, lt=1.0)
     done: bool
     info: StepInfo
 

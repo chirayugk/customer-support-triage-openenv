@@ -20,7 +20,7 @@ from models import (
     StepResult,
     TasksResponse,
 )
-from server.simulation import SupportTriageEnv, TASKS
+from server.simulation import STRICT_SCORE_EPSILON, SupportTriageEnv, TASKS
 
 
 APP_VERSION = "1.1.0"
@@ -744,7 +744,7 @@ def metadata() -> MetadataResponse:
         description="Programmatic triage benchmark with deterministic graders and dense rewards.",
         benchmark=BENCHMARK,
         version=APP_VERSION,
-        rewards_range=[0.0, 1.0],
+        rewards_range=[STRICT_SCORE_EPSILON, 1.0 - STRICT_SCORE_EPSILON],
         tasks=[task.spec for task in TASKS.values()],
     )
 
